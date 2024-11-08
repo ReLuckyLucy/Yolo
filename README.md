@@ -26,7 +26,7 @@ pip install git+https://github.com/ultralytics/ultralytics.git
 conda install -c conda-forge ultralytics
 ```
 
-**此方法是 pip 的绝佳替代方案，可确保与环境中的其他包兼容。对于 CUDA 环境，最好安装 、 ，并同时解决任何冲突：ultralytics pytorch pytorch-cuda**
+**此方法是 pip 的绝佳替代方案，可确保与环境中的：ultralytics pytorch pytorch-cuda与其他包兼容。对于 CUDA 环境，最好安装，其能同时解决任何冲突**
 
 ```
 conda install -c pytorch -c nvidia -c conda-forge pytorch torchvision pytorch-cuda=11.8 ultralytics
@@ -127,7 +127,9 @@ results = model.predict(source=[im1, im2])
 
 
 ## 📋︎使用Comet ML进行可视化面板
-![This is an Comet](img\Comet.png )
+<div align="center">
+ <img alt="logo"  src="img\comet.png">
+</div>
 
 记录关键训练细节（如参数、指标、图像预测和模型检查点）在机器学习中至关重要，它可以保持项目的透明度、进度的可衡量性和结果的可重复性。
 
