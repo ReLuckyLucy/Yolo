@@ -127,6 +127,7 @@ results = model.predict(source=[im1, im2])
 
 
 ## 📋︎使用Comet ML进行可视化面板
+
 <div align="center">
  <img alt="comet"  src="img\comet.png">
 </div>
