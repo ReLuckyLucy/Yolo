@@ -128,7 +128,7 @@ results = model.predict(source=[im1, im2])
 
 ## 📋︎使用Comet ML进行可视化面板
 <div align="center">
- <img alt="logo"  src="img\comet.png">
+ <img alt="comet"  src="img\comet.png">
 </div>
 
 记录关键训练细节（如参数、指标、图像预测和模型检查点）在机器学习中至关重要，它可以保持项目的透明度、进度的可衡量性和结果的可重复性。
