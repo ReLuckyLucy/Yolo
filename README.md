@@ -2,7 +2,6 @@
  <img alt="logo" height="200px" src="img\logo.png">
 </div>
 
-<h1 align="center">Yolo</h1>
 <h1 align="center">Yolo框架整合</h1>
 
 <div align="center">
