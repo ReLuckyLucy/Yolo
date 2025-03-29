@@ -174,10 +174,12 @@ results = model(
 ```bash
 pip install mss
 ```
-> 若发现有警告警告
+> 这时候我们会发现会有警告
+>
 > “WARNING ⚠️ inference results will accumulate in RAM unless `stream=True` is passed, causing potential out-of-memory
 > errors for large sources or long-running streams and videos. See https://docs.ultralytics.com/modes/predict/ for help.”
-> 进行连续屏幕检测时，若不启用 `stream=True` 参数，所有检测结果会直接存储在内存中。对于长时间运行的屏幕流或高分辨率输入，会导致内存持续增长直至溢出
+>
+> 本质：进行连续屏幕检测时，若不启用 `stream=True` 参数，所有检测结果会直接存储在内存中。对于长时间运行的屏幕流或高分辨率输入，会导致内存持续增长直至溢出
 
 ```python
 from ultralytics import YOLO
