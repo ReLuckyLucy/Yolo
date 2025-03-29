@@ -45,6 +45,25 @@ pip install -e .
 ```
  <br />
 
+## 🦄ReLucy运行代码
+### 运行训练代码
+```bash
+cd train 
+python train.py
+```
+
+### 运行有comet可视化的训练代码
+```bash
+python train_comet.py
+```
+
+### 验证可视化界面移植
+>### 超值体验
+可视化界面由python库`gradio`实现
+```bash
+python app.py
+```
+
 ## ✍️训练
 使用`CLI`
 
@@ -100,7 +119,13 @@ results = model.train(
     # resume=True,         # ⏯️ 恢复中断的训练
 )
 ```
+## ⚠️警告
+1.一般来说，报错多数是因为路径问题
 
+2.若出现训练慢/使用了 DEVICE = "0" 参数后报错，一般来说是由于pytorch没有下载好相对应的版本,可以运行 pytorch_test.py 进行测试
+```
+python pytorch_test.py
+```
  <br />
 
 ## 🎃验证
@@ -216,96 +241,9 @@ results = model(
 
 <br/>
 
-## 📋︎使用Comet ML进行可视化面板
-
-<div align="center">
- <img alt="comet"  src="img\comet.png">
-</div>
-
-记录关键训练细节（如参数、指标、图像预测和模型检查点）在机器学习中至关重要，它可以保持项目的透明度、进度的可衡量性和结果的可重复性。
-
-Ultralytics YOLO11 与 Comet ML 无缝集成，可有效捕获和优化 YOLO11 对象检测模型训练过程的各个方面。在本指南中，我们将介绍安装过程、Comet ML 设置、实时洞察、自定义日志记录和离线使用，确保您的 YOLO11 培训得到全面记录和微调，以获得出色的结果。
-
- <br />
-
-### 下载
-```
-pip install ultralytics comet_ml torch torchvision
-```
-安装所需的软件包后，您需要注册、获取 [Comet API Key](https://www.comet.com/signup) 密钥并对其进行配置。
-
-```
-export COMET_API_KEY=<Your API Key>
-```
-> 警告，export为Linux的命令，要在window下运行，有两种选择
-> + 临时设置 API 密钥
-> + 永久设置 API 密钥
-### 在 Windows 中设置 `COMET_API_KEY`
-
-1. **临时设置 API 密钥**:
-   在命令行中使用 `set` 命令临时设置环境变量：
-   ```bash
-   set COMET_API_KEY=BV7SlLzug7TSvVqv4PMmFNpCT
-   ```
-   这会将 `COMET_API_KEY` 设置为当前会话中的环境变量，但关闭命令行窗口后会失效。
-
-2. **永久设置 API 密钥**:
-   如果希望永久保存 API 密钥，您可以通过以下步骤：
-   - **打开环境变量设置**:
-     1. 右键点击“此电脑”（或“我的电脑”）图标，选择“属性”。
-     2. 点击“高级系统设置”。
-     3. 在“系统属性”窗口中，点击“环境变量”。
-   - **添加新的系统环境变量**:
-     1. 在“环境变量”窗口中，点击“系统变量”区域的“新建”按钮。
-     2. 设置变量名为 `COMET_API_KEY`，并将变量值设置为您的 API 密钥 `********************`。
-     3. 点击“确定”保存设置。
-
-3. **验证 API 密钥是否生效**:
-   在命令行中运行以下命令来检查 Comet ML 是否能够成功识别您的 API 密钥：
-   ```bash
-   comet-cli check
-   ```
-   如果 API 密钥有效，您应该看到相关的确认信息。
-
-### 使用 Comet ML 登录
-
-一旦 API 密钥设置完成，您就可以使用 Comet ML 提供的命令行工具进行登录。例如：
-
-```bash
-comet login
-```
-
-它会要求您输入 API 密钥，如果环境变量已经配置正确，应该不需要再次输入。
-
- <br />
 
 
-## ReLucy运行代码
-### 运行训练代码
-```bash
-cd train 
-python train.py
-```
-
-### 运行有comet可视化的训练代码
-```bash
-python train_comet.py
-```
-
-### 验证可视化界面移植
-可视化界面由python库`gradio`实现
-
-```bash
-python app.py
-```
-
-## ⚠️警告
-1.一般来说，报错多数是因为路径问题
-
-2.若出现训练慢/使用了 DEVICE = "0" 参数后报错，一般来说是由于pytorch没有下载好相对应的版本,可以运行 pytorch_test.py 进行测试
-```
-python pytorch_test.py
-```
+<br/>
 
 ## 🏛️模型简介
 YOLO11 检测、分割和姿态模型在 [COCO](https://docs.ultralytics.com/datasets/detect/coco/) 数据集上进行预训练，这些模型可在此处获得，此外还有在 [ImageNet](https://docs.ultralytics.com/datasets/classify/imagenet/) 数据集上预训练的 YOLO11 分类 模型。
