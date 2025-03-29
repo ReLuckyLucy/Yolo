@@ -1,21 +1,23 @@
 import gradio as gr
 import cv2
 import tempfile
-from ultralytics import YOLO  # 改为导入 YOLO 类
+from ultralytics import YOLO
+import os
+import numpy as np
 
 # 映射模型名称和模型文件路径
 model_mapping = {
-    "这里是训好的模型路径": r"E:\Desktop\redCard_train\weights\best.pt"  # 这里填写训好的模型路径
+    "YOLOv11n": "model/yolo11n.pt"
 }
 
-def yolov10_inference(image, video, model_name, image_size, conf_threshold):
+def yolo_inference(image, video, model_name, image_size, conf_threshold):
     model_path = model_mapping[model_name]  # 从映射中获取模型路径
-    model = YOLO(model_path)  # 使用本地路径加载模型，改为 YOLO 类
-    if image:
+    model = YOLO(model_path)  # 使用本地路径加载模型
+    if image is not None:
         results = model.predict(source=image, imgsz=image_size, conf=conf_threshold)
         annotated_image = results[0].plot()
         return annotated_image[:, :, ::-1], None
-    else:
+    elif video is not None:
         video_path = tempfile.mktemp(suffix=".webm")
         with open(video_path, "wb") as f:
             with open(video, "rb") as g:
@@ -44,47 +46,76 @@ def yolov10_inference(image, video, model_name, image_size, conf_threshold):
         return None, output_video_path
 
 
-def yolov10_inference_for_examples(image, model_name, image_size, conf_threshold):
-    annotated_image, _ = yolov10_inference(image, None, model_name, image_size, conf_threshold)
+def yolo_inference_for_examples(image, model_name, image_size, conf_threshold):
+    annotated_image, _ = yolo_inference(image, None, model_name, image_size, conf_threshold)
     return annotated_image
 
 
+# ==================== 应用入口 ====================
 def app():
-    with gr.Blocks():
+    # 示例图片路径
+    test_image_path = os.path.abspath("img/test.png")
+    example_samples = []
+    if os.path.exists(test_image_path):
+        example_samples.append([test_image_path, "YOLOv11n", 640, 0.25])
+    
+    # 使用Soft主题构建界面
+    with gr.Blocks(title="YOLOv11目标检测系统", theme=gr.themes.Soft()) as demo:
+        gr.Markdown("# 🎯 YOLOv11 目标检测系统")
+        gr.Markdown("上传图像或视频进行目标检测，支持参数调节")
+        
         with gr.Row():
-            with gr.Column():
-                image = gr.Image(type="pil", label="上传图片", visible=True)
-                video = gr.Video(label="上传视频", visible=False)
+            # 左侧控制面板
+            with gr.Column(scale=1):
                 input_type = gr.Radio(
                     choices=["图片", "视频"],
                     value="图片",
                     label="输入类型",
+                    info="选择处理的媒体类型"
                 )
-                model_name = gr.Dropdown(
-                    label="选择模型",
-                    choices=list(model_mapping.keys()),  # 界面显示模型名称
-                    value="中文名字",  # 默认选择模型
-                )
-                image_size = gr.Slider(
-                    label="图片尺寸",
-                    minimum=320,
-                    maximum=1280,
-                    step=32,
-                    value=640,
-                )
-                conf_threshold = gr.Slider(
-                    label="置信度阈值",
-                    minimum=0.0,
-                    maximum=1.0,
-                    step=0.05,
-                    value=0.25,
-                )
-                yolov10_infer = gr.Button(value="开始识别")
-
-            with gr.Column():
-                output_image = gr.Image(type="numpy", label="结果", visible=True)
-                output_video = gr.Video(label="结果", visible=False)
-
+                
+                image = gr.Image(label="输入图像", type="pil", visible=True)
+                video = gr.Video(label="输入视频", visible=False)
+                
+                with gr.Accordion("模型参数", open=False):
+                    model_name = gr.Dropdown(
+                        label="模型选择",
+                        choices=list(model_mapping.keys()),
+                        value="YOLOv11n",
+                        info="选择要使用的YOLOv11模型版本"
+                    )
+                    
+                    image_size = gr.Slider(
+                        minimum=320, maximum=1280, value=640, step=32,
+                        label="图像尺寸",
+                        info="更大的尺寸通常能提高精度，但会降低速度"
+                    )
+                    
+                    conf_threshold = gr.Slider(
+                        minimum=0.0, maximum=1.0, value=0.25, step=0.05,
+                        label="置信度阈值",
+                        info="调整检测的置信度阈值，较低的值会增加检测数量但可能增加误报"
+                    )
+                
+                submit_btn = gr.Button("🚀 开始检测", variant="primary")
+            
+            # 右侧结果展示
+            with gr.Column(scale=2):
+                output_image = gr.Image(label="检测结果", type="numpy", visible=True)
+                output_video = gr.Video(label="检测结果", visible=False)
+        
+        # 示例区块
+        if example_samples:
+            gr.Examples(
+                examples=example_samples,
+                inputs=[image, model_name, image_size, conf_threshold],
+                outputs=output_image,
+                fn=yolo_inference_for_examples,
+                cache_examples=True,
+                label="快速示例"
+            )
+        
+        # 交互逻辑
         def update_visibility(input_type):
             image_visibility = input_type == "图片"
             video_visibility = input_type == "视频"
@@ -104,41 +135,23 @@ def app():
 
         def run_inference(image, video, model_name, image_size, conf_threshold, input_type):
             if input_type == "图片":
-                return yolov10_inference(image, None, model_name, image_size, conf_threshold)
+                return yolo_inference(image, None, model_name, image_size, conf_threshold)
             else:
-                return yolov10_inference(None, video, model_name, image_size, conf_threshold)
+                return yolo_inference(None, video, model_name, image_size, conf_threshold)
 
-
-        yolov10_infer.click(
+        submit_btn.click(
             fn=run_inference,
             inputs=[image, video, model_name, image_size, conf_threshold, input_type],
             outputs=[output_image, output_video],
         )
+        
+        return demo
 
-        gr.Examples(
-            examples=[[
-                r"top.JPG",  # 放例子图片
-                "中文名字",  # 界面显示的模型名称
-                640,
-                0.25,
-            ]],
-            fn=yolov10_inference_for_examples,
-            inputs=[image, model_name, image_size, conf_threshold],
-            outputs=[output_image],
-            cache_examples='lazy',
-        )
-
-gradio_app = gr.Blocks()
-with gradio_app:
-    gr.HTML(
-        """
-    <h1 style='text-align: center'>
-    识别集群
-    </h1>
-    """)
-    with gr.Row():
-        with gr.Column():
-            app()
-
+# ==================== 启动应用 ====================
 if __name__ == '__main__':
-    gradio_app.launch()
+    demo = app()
+    demo.launch(
+        server_name="127.0.0.1",
+        server_port=7860,
+        share=False
+    )
