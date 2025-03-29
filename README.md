@@ -135,99 +135,55 @@ model.val(data="path/to/separate/data.yaml")
 
 ## 🔮预测
 预测用于使用经过训练的 YOLO 模型对新图像或视频进行预测。在此模式下，模型是从检查点文件加载的，用户可以提供图像或视频来执行推理。该模型预测输入图像或视频中对象的类别和位置
-### 检测图片
 
-#### 未训练模型与预训练模型的对比
+> ## 这里的代码都可以在verification文件夹内找到
 
-> 复制下面的代码到yolov8_photo_yaml.py中
-
-```py
+```python
 from ultralytics import YOLO
-
-# 使用未训练的模型模型
-model = YOLO("yolov8n.yaml")
+# 加载预训练模型
+model = YOLO('model/yolo11n.pt')
 
 # 进行视频检测（会自动保存结果）
 results = model(
-    source = 'bus.jpg',
+    source = 'img/test.png',
+    show = True,    # 实时显示检测窗口
+    save = True,    # 保存检测结果视频
+)
+```
+检测完后，图片会存放到runs/detect/predict
+
+
+### 检测视频
+> 在yolo中，会将视频裁剪成一帧一帧，进而逐帧去学习
+```python
+from ultralytics import YOLO
+
+# 加载预训练模型
+model = YOLO('model/yolo11n.pt')
+
+# 进行视频检测（会自动保存结果）
+results = model(
+    source = 'img/test.mp4',
     show = True,    # 实时显示检测窗口
     save = True,    # 保存检测结果视频
 )
 ```
 
-> 复制下面的代码到yolov8_photo_pt.py中
-
-~~~python
-from ultralytics import YOLO
-# 加载预训练模型
-model = YOLO('yolov8n.pt')
-
-# 进行视频检测（会自动保存结果）
-results = model(
-    source = 'bus.jpg',
-    show = True,    # 实时显示检测窗口
-    save = True,    # 保存检测结果视频
-)
-~~~
-
-> 检测完后，图片会存放到runs/detect/predict
-
-![image-20250305232939613](yolo模型实操.assets/image-20250305232939613.png)
-
-### 检测视频
-
-> 复制下面的代码到yolov8_photo_pt.py中
->
-> 在yolo中，会将视频裁剪成一帧一帧，进而逐帧去学习
-
-~~~python
-from ultralytics import YOLO
-
-# 加载预训练模型
-model = YOLO('yolov8n.pt')
-
-# 进行视频检测（会自动保存结果）
-results = model(
-    source = '20250305_teach.mp4',
-    show = True,    # 实时显示检测窗口
-    save = True,    # 保存检测结果视频
-)
-~~~
-
-![image-20250305233311621](yolo模型实操.assets/image-20250305233311621.png)
-
-![image-20250305233325579](yolo模型实操.assets/image-20250305233325579.png)
-
 ### 检测屏幕
-
-> 在终端输入：pip install mss
->
-> 复制下面的代码到yolov8_screen.py中
-
-~~~python
-from ultralytics import YOLO
-
-# 加载预训练模型
-model = YOLO('yolov8n.pt')
-
-# 进行视频检测（会自动保存结果）
-results = model(
-    source = 'screen',
-)
-~~~
-
-> 这时候我们会发现会有警告
->
+需要安装库 mss
+```bash
+pip install mss
+```
+> 若发现有警告警告
 > “WARNING ⚠️ inference results will accumulate in RAM unless `stream=True` is passed, causing potential out-of-memory
 > errors for large sources or long-running streams and videos. See https://docs.ultralytics.com/modes/predict/ for help.”
->
-> 本质：进行连续屏幕检测时，若不启用 `stream=True` 参数，所有检测结果会直接存储在内存中。对于长时间运行的屏幕流或高分辨率输入，会导致内存持续增长直至溢出
+> 进行连续屏幕检测时，若不启用 `stream=True` 参数，所有检测结果会直接存储在内存中。对于长时间运行的屏幕流或高分辨率输入，会导致内存持续增长直至溢出
 
-~~~python
+```python
 from ultralytics import YOLO
 
 # 加载预训练模型
-model = YOLO('yolov8n.pt')
+model = YOLO('model/yolo11n.pt')
 
 # 进行视频检测（会自动保存结果）
 results = model(
@@ -240,24 +196,21 @@ for r in results:
     cls_probs = r.probs    # 分类任务的概率（若适用）
     if hasattr(r, 'masks'):
         masks = r.masks    # 实例分割的掩膜（若适用）
-~~~
+```
 
 #### 检测电脑摄像头
 
-> 复制下面的代码到yolov8_camera.py中
-
-~~~python
+```python
 from ultralytics import YOLO
 
 # 加载预训练模型
-model = YOLO('yolov8n.pt')
+model = YOLO('model/yolo11n.pt')
 
 # 进行视频检测（会自动保存结果）
 results = model(
     source = 0,
 )
-
-
+```
 
 <br/>
 
