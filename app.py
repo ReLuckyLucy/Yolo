@@ -4,10 +4,12 @@ import tempfile
 from ultralytics import YOLO
 import os
 import numpy as np
+import time
 
 # 映射模型名称和模型文件路径
 model_mapping = {
-    "YOLOv11n": "model/yolo11n.pt"
+    "YOLOv11n": "model/yolo11n.pt",
+    "YOLOv11e": "model/yoloe-11m-seg-pf.pt",
 }
 
 def yolo_inference(image, video, model_name, image_size, conf_threshold):
@@ -18,7 +20,7 @@ def yolo_inference(image, video, model_name, image_size, conf_threshold):
         annotated_image = results[0].plot()
         return annotated_image[:, :, ::-1], None
     elif video is not None:
-        video_path = tempfile.mktemp(suffix=".webm")
+        video_path = tempfile.mktemp(suffix=".mp4")
         with open(video_path, "wb") as f:
             with open(video, "rb") as g:
                 f.write(g.read())
@@ -28,8 +30,10 @@ def yolo_inference(image, video, model_name, image_size, conf_threshold):
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        output_video_path = tempfile.mktemp(suffix=".webm")
-        out = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*'vp80'), fps, (frame_width, frame_height))
+        output_video_path = tempfile.mktemp(suffix=".mp4")
+        # 使用mp4格式和H.264编码器
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(output_video_path, fourcc, fps, (frame_width, frame_height))
 
         while cap.isOpened():
             ret, frame = cap.read()
@@ -38,12 +42,19 @@ def yolo_inference(image, video, model_name, image_size, conf_threshold):
 
             results = model.predict(source=frame, imgsz=image_size, conf=conf_threshold)
             annotated_frame = results[0].plot()
+            # 转换BGR到RGB以保持与图像处理一致
             out.write(annotated_frame)
 
         cap.release()
         out.release()
 
-        return None, output_video_path
+        # 确保文件写入完成
+        time.sleep(1)
+        
+        if os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0:
+            return None, output_video_path
+        else:
+            return None, None
 
 
 def yolo_inference_for_examples(image, model_name, image_size, conf_threshold):

@@ -8,6 +8,9 @@
  <img alt="logo"  src="img\yolo.png">
 </div>
 
+
+> 现已加入yoloe模块，在app.py内已经写入，但模型需要自行下载
+
 ## 💫环境下载
 ### pip
 使用 `pip` 安装 Ultralytics，请执行以下命令：
