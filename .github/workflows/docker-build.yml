@@ -42,8 +42,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/relucyimages:yolov-${{ steps.date.outputs.value }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/relucyimages:yolov-latest
+            relucy/yolov:${{ steps.date.outputs.value }}
+            relucy/yolov:latest
       
       # 添加构建摘要信息
       - name: Push Summary
