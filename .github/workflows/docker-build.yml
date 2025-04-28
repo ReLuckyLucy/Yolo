@@ -5,19 +5,12 @@ name: Docker Image CI
 on:
   push:
     branches:
-      - main  # 主分支推送时触发
+      - main
 
 # 定义构建和发布任务
 jobs:
   build-and-publish:
-    # 在最新的Ubuntu环境中运行
     runs-on: ubuntu-latest
-
-    # 设置环境变量
-    env:
-      IMAGE_NAME: yolov
-
-    # 定义构建步骤
     steps:
       # 获取当前日期作为镜像标签（使用上海时区）
       - name: Get current date for Image Tag
@@ -41,9 +34,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: |
-            relucy/yolov:${{ steps.date.outputs.value }}
-            relucy/yolov:latest
+          tags: relucy/yolov:${{ steps.date.outputs.value }},relucy/yolov:latest
       
       # 添加构建摘要信息
       - name: Push Summary
