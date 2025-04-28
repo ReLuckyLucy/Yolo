@@ -1,11 +1,13 @@
 # 工作流名称
 name: Docker Image CI
 
-# 触发条件：当推送标签时触发
+# 触发条件：当推送代码时触发
 on:
   push:
+    branches:
+      - main  # 主分支推送时触发
     tags:
-      - '*'
+      - '*'   # 标签推送时也触发
 
 # 定义构建和发布任务
 jobs:
@@ -19,10 +21,15 @@ jobs:
 
     # 定义构建步骤
     steps:
-      # 获取标签名称
+      # 获取标签名称（如果是标签推送）
       - name: Get Tag Name
         id: tag
-        run: echo "value=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            echo "value=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "value=dev" >> $GITHUB_OUTPUT
+          fi
       
       # 获取当前日期作为镜像标签（使用上海时区）
       - name: Get current date for Image Tag
@@ -52,11 +59,11 @@ jobs:
           # 设置多个标签
           tags: |
             # 使用日期作为标签
-            ${{ secrets.DOCKER_HUB_USERNAME }}/relucyimages:yolov-${{ steps.date.outputs.value }}
-            # 使用Git标签作为版本标签
-            ${{ secrets.DOCKER_HUB_USERNAME }}/relucyimages:yolov-${{ steps.tag.outputs.value }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/relucyimages:yolov-${{ steps.date.outputs.value }}
+            # 使用Git标签作为版本标签（如果是标签推送）
+            ${{ secrets.DOCKERHUB_USERNAME }}/relucyimages:yolov-${{ steps.tag.outputs.value }}
             # 使用latest作为最新版本标签
-            ${{ secrets.DOCKER_HUB_USERNAME }}/relucyimages:yolov-latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/relucyimages:yolov-latest
       
       # 添加构建摘要信息
       - name: Push Summary
