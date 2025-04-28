@@ -22,7 +22,7 @@ jobs:
 
       - name: Generate tag
         id: tag
-        run: echo "::set-output name=tag::$(date +'%Y/%m/%d/%H:%M')"
+        run: echo "::set-output name=tag::$(date +'%Y_%m_%d_%H_%M')"
 
       - name: Build and push
         uses: docker/build-push-action@v4
