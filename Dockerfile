@@ -24,15 +24,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh \
     && bash miniconda.sh -b -p /opt/conda \
     && rm miniconda.sh \
-    && echo 'export PATH="/opt/conda/bin:${PATH}"' >> /root/.bashrc
+    && echo 'export PATH="/opt/conda/bin:${PATH}"' >> /root/.bashrc \
+    && /opt/conda/bin/conda init bash
 
 # 设置conda环境变量
 ENV PATH="/opt/conda/bin:${PATH}"
 
 # 复制项目文件并安装依赖（合并COPY和RUN命令以减少层级）
 COPY requirements.txt .
-RUN conda create -n yolo python=3.12 -y \
-    && conda activate yolo \
+RUN /opt/conda/bin/conda create -n yolo python=3.12 -y \
+    && . /opt/conda/bin/activate yolo \
     && pip install -r requirements.txt
 
 # 复制项目文件
