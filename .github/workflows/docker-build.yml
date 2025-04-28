@@ -1,32 +1,63 @@
-name: Docker Build and Push
+# 工作流名称
+name: Docker Image CI
 
+# 触发条件：当推送标签时触发
 on:
   push:
-    branches: [ main ]
+    tags:
+      - '*'
 
+# 定义构建和发布任务
 jobs:
-  build-and-push:
+  build-and-publish:
+    # 在最新的Ubuntu环境中运行
     runs-on: ubuntu-latest
+
+    # 设置环境变量
+    env:
+      IMAGE_NAME: yolov
+
+    # 定义构建步骤
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
+      # 获取标签名称
+      - name: Get Tag Name
+        id: tag
+        run: echo "value=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      
+      # 获取当前日期作为镜像标签（使用上海时区）
+      - name: Get current date for Image Tag
+        id: date
+        run: echo "value=$(TZ='Asia/Shanghai' date +'%Y/%m/%d/%H:%M')" >> $GITHUB_OUTPUT
+      
+      # 检出代码
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      # 登录到Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      - name: Generate tag
-        id: tag
-        run: echo "::set-output name=tag::$(date +'%Y_%m_%d_%H_%M')"
-
-      - name: Build and push
-        uses: docker/build-push-action@v4
+      
+      # 构建并推送Docker镜像
+      - name: Build and Push Image
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: relucy/yolo:${{ steps.tag.outputs.tag }} 
+          # 传递版本信息到Dockerfile
+          build-args: |
+            YOLOV_VERSION=${{ steps.tag.outputs.value }}
+          # 设置多个标签
+          tags: |
+            # 使用日期作为标签
+            ${{ secrets.DOCKER_HUB_USERNAME }}/relucyimages:yolov-${{ steps.date.outputs.value }}
+            # 使用Git标签作为版本标签
+            ${{ secrets.DOCKER_HUB_USERNAME }}/relucyimages:yolov-${{ steps.tag.outputs.value }}
+            # 使用latest作为最新版本标签
+            ${{ secrets.DOCKER_HUB_USERNAME }}/relucyimages:yolov-latest
+      
+      # 添加构建摘要信息
+      - name: Push Summary
+        run: echo "### Build YOLOv ${{ steps.tag.outputs.value }} :rocket:" >> $GITHUB_STEP_SUMMARY 

@@ -1,10 +1,14 @@
+# 设置构建参数
+ARG YOLOV_VERSION=latest
+
 # 使用Ubuntu 24.04作为基础镜像
 FROM ubuntu:24.04
 
 # 设置环境变量
 ENV LANG=C.UTF-8 \
     TZ=Asia/Shanghai \
-    DEBIAN_FRONTEND=noninteractive
+    DEBIAN_FRONTEND=noninteractive \
+    YOLOV_VERSION=${YOLOV_VERSION}
 
 # 设置工作目录
 WORKDIR /app
@@ -41,6 +45,11 @@ COPY . .
 
 # 配置SSH服务
 EXPOSE 22
+
+# 添加版本信息
+LABEL org.opencontainers.image.version="${YOLOV_VERSION}" \
+      org.opencontainers.image.description="YOLOv Docker Image" \
+      org.opencontainers.image.source="https://github.com/relucy/yolo"
 
 # 设置启动命令
 CMD ["/bin/bash", "-c", "/etc/init.d/ssh start && tail -f /dev/null"] 
