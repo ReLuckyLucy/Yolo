@@ -7,6 +7,7 @@ import numpy as np
 import time
 import json
 from datetime import datetime
+from distance.distance_estimator import DistanceEstimator
 
 # 确保结果目录存在
 os.makedirs("results", exist_ok=True)
@@ -145,7 +146,7 @@ def save_results_to_json(results, output_path, mode="detection"):
             json.dump({"error": str(json_error)}, f)
         return error_path
 
-def yolo_inference(image, video, model_name, image_size, conf_threshold):
+def yolo_inference(image, video, model_name, image_size, conf_threshold, enable_distance=False):
     model_path = model_mapping[model_name]
     try:
         model = YOLO(model_path)
@@ -164,13 +165,62 @@ def yolo_inference(image, video, model_name, image_size, conf_threshold):
                 
                 return empty_image, None, json_path
             
-            annotated_image = results[0].plot()
+            # 获取原始图像
+            if isinstance(image, str):
+                # 如果输入是文件路径，则读取图像
+                img = cv2.imread(image)
+                if img is None:
+                    raise ValueError(f"无法读取图像: {image}")
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            else:
+                # 如果输入是PIL图像，则转换为numpy数组
+                img = np.array(image)
+                if img.shape[2] == 4:  # 如果包含alpha通道，则移除
+                    img = img[:, :, :3]
+            
+            # 如果启用距离检测
+            if enable_distance:
+                # 初始化距离估计器
+                estimator = DistanceEstimator()
+                
+                # 获取检测结果
+                result = results[0]
+                
+                # 处理每个检测框
+                if hasattr(result, 'boxes') and result.boxes is not None:
+                    for box in result.boxes:
+                        # 获取边界框坐标
+                        bbox = box.xyxy[0].cpu().numpy()
+                        # 获取类别ID和名称
+                        class_id = int(box.cls[0])
+                        class_name = result.names[class_id]
+                        # 估计距离
+                        distance = estimator.estimate_distance(bbox, class_name, img.shape[0])
+                        
+                        # 在图像上绘制距离信息
+                        x1, y1, x2, y2 = map(int, bbox)
+                        label = f"{class_name} {box.conf[0]:.2f} {distance:.2f}m"
+                        
+                        # 绘制边界框和标签
+                        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                        # 计算文本大小
+                        (text_width, text_height), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+                        # 绘制文本背景
+                        cv2.rectangle(img, (x1, y1 - 25), (x1 + text_width + 5, y1), (0, 255, 0), -1)
+                        # 绘制文本
+                        cv2.putText(img, label, (x1, y1 - 8), 
+                                  cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1, cv2.LINE_AA)
+                
+                annotated_image = img
+            else:
+                # 如果不启用距离检测，使用默认的plot方法
+                annotated_image = results[0].plot()
             
             # 保存检测结果到JSON
             json_path = os.path.join("results", f"detection_{int(time.time())}.json")
             save_results_to_json(results, json_path, "image_detection")
             
-            return annotated_image[:, :, ::-1], None, json_path
+            return annotated_image, None, json_path
         elif video is not None:
             try:
                 video_path = tempfile.mktemp(suffix=".mp4")
@@ -199,7 +249,44 @@ def yolo_inference(image, video, model_name, image_size, conf_threshold):
                         break
 
                     frame_results = model.predict(source=frame, imgsz=image_size, conf=conf_threshold)
-                    annotated_frame = frame_results[0].plot()
+                    
+                    # 如果启用距离检测
+                    if enable_distance and len(frame_results) > 0 and hasattr(frame_results[0], 'boxes'):
+                        # 获取当前帧的检测结果
+                        result = frame_results[0]
+                        # 复制帧用于绘制
+                        annotated_frame = frame.copy()
+                        
+                        # 初始化距离估计器
+                        estimator = DistanceEstimator()
+                        
+                        # 处理每个检测框
+                        for box in result.boxes:
+                            # 获取边界框坐标
+                            bbox = box.xyxy[0].cpu().numpy()
+                            # 获取类别ID和名称
+                            class_id = int(box.cls[0])
+                            class_name = result.names[class_id]
+                            # 估计距离
+                            distance = estimator.estimate_distance(bbox, class_name, frame.shape[0])
+                            
+                            # 在图像上绘制距离信息
+                            x1, y1, x2, y2 = map(int, bbox)
+                            label = f"{class_name} {box.conf[0]:.2f} {distance:.2f}m"
+                            
+                            # 绘制边界框和标签
+                            cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                            # 计算文本大小
+                            (text_width, text_height), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+                            # 绘制文本背景
+                            cv2.rectangle(annotated_frame, (x1, y1 - 25), (x1 + text_width + 5, y1), (0, 255, 0), -1)
+                            # 绘制文本
+                            cv2.putText(annotated_frame, label, (x1, y1 - 8), 
+                                      cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1, cv2.LINE_AA)
+                    else:
+                        # 如果不启用距离检测，使用默认的plot方法
+                        annotated_frame = frame_results[0].plot()
+                    
                     out.write(annotated_frame)
                     
                     # 只保存有检测结果的帧
@@ -447,6 +534,13 @@ def app():
                             value="YOLOv11n",
                             info="选择要使用的YOLOv11模型版本"
                         )
+                        
+                        # 添加距离检测开关
+                        enable_distance = gr.Checkbox(
+                            label="启用距离检测",
+                            value=False,
+                            info="是否启用目标距离检测功能"
+                        )
                     
                     with gr.Group(visible=False) as yoloe_pf_model_group:
                         yoloe_pf_model = gr.Dropdown(
@@ -476,7 +570,9 @@ def app():
                         info="调整检测的置信度阈值，较低的值会增加检测数量但可能增加误报"
                     )
                 
-                submit_btn = gr.Button("🚀 开始检测", variant="primary")
+                with gr.Row():
+                    submit_btn = gr.Button("🚀 开始检测", variant="primary")
+                    clear_btn = gr.Button("🗑️ 清除", variant="secondary")
             
             # 右侧结果展示
             with gr.Column(scale=2):
@@ -597,7 +693,7 @@ def app():
         def run_inference(input_type, 
                          image, video, segmentation_image, separate_seg_image, classes,
                          yolo_model, yoloe_pf_model, yoloe_seg_model,
-                         image_size, conf_threshold):
+                         image_size, conf_threshold, enable_distance=False):
             try:
                 if input_type == "图片":
                     if image is None:
@@ -607,7 +703,7 @@ def app():
                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
                         return empty_img, None, None, None, None
                         
-                    output_img, _, json_path = yolo_inference(image, None, yolo_model, image_size, conf_threshold)
+                    output_img, _, json_path = yolo_inference(image, None, yolo_model, image_size, conf_threshold, enable_distance)
                     return output_img, None, None, None, json_path
                 elif input_type == "视频":
                     if video is None:
@@ -617,7 +713,7 @@ def app():
                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
                         return empty_img, None, None, None, None
                         
-                    _, output_vid, json_path = yolo_inference(None, video, yolo_model, image_size, conf_threshold)
+                    _, output_vid, json_path = yolo_inference(None, video, yolo_model, image_size, conf_threshold, enable_distance)
                     return None, output_vid, None, None, json_path
                 elif input_type == "分割":
                     if segmentation_image is None:
@@ -662,9 +758,19 @@ def app():
                 input_type, 
                 image, video, segmentation_image, separate_seg_image, classes,
                 yolo_model, yoloe_pf_model, yoloe_seg_model,
-                image_size, conf_threshold
+                image_size, conf_threshold, enable_distance
             ],
             outputs=[output_image, output_video, output_segmentation, output_separate_seg, json_output],
+        )
+        
+        # 清除按钮功能
+        def clear_all():
+            return [None] * 5  # 清除所有输出
+            
+        clear_btn.click(
+            fn=clear_all,
+            inputs=[],
+            outputs=[output_image, output_video, output_segmentation, output_separate_seg, json_output]
         )
         
         return demo
