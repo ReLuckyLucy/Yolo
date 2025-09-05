@@ -11,8 +11,9 @@
 
 > 现已加入yoloe模块 
 
-## 💫环境下载
-### pip
+# 💫环境下载
+## pip
+
 使用 `pip` 安装 Ultralytics，请执行以下命令：
 ```bash
 pip install ultralytics
@@ -22,20 +23,27 @@ pip install ultralytics
 ```bash
 pip install git+https://github.com/ultralytics/ultralytics.git
 ```
-### conda 
+
+使用 `pip` 一键安装 Ultralytics与可视化界面模块gradio，请执行以下命令：
+```bash
+pip install -r requirements.txt
+```
+
+
+## conda 
+
 使用 `conda` 安装 Ultralytics YOLO 
 ```bash
 conda install -c conda-forge ultralytics
 ```
 
-**此方法是 pip 的绝佳替代方案，可确保与环境中的：ultralytics pytorch pytorch-cuda与其他包兼容。对于 CUDA 环境，最好安装，其能同时解决任何冲突**
-
+>**此方法是 pip 的绝佳替代方案，可确保与环境中的：ultralytics pytorch pytorch-cuda与其他包兼容。对于 CUDA 环境，最好安装，其能同时解决任何冲突**
 ```bash
 conda install -c pytorch -c nvidia -c conda-forge pytorch torchvision pytorch-cuda=11.8 ultralytics
 ```
 
-### 源码编译
-克隆 Ultralytics 存储库并设置开发环境
+## 源码编译
+克隆官方 Ultralytics 存储库并设置开发环境
 ```bash
 # Clone the ultralytics repository
 git clone https://github.com/ultralytics/ultralytics
@@ -46,46 +54,57 @@ cd ultralytics
 # Install the package in editable mode for development
 pip install -e .
 ```
- <br />
+<br/>
 
-## 🦄ReLucy运行代码
-### 运行训练代码
+# 🦄运行代码
+## 运行训练代码
 ```bash
 cd train 
 python train.py
 ```
 
-### 运行有comet可视化的训练代码
+## 运行有comet可视化的训练代码
 ```bash
+cd train
 python train_comet.py
 ```
 
-### 验证可视化界面移植
->### 超值体验
+## 验证可视化界面移植
 可视化界面由python库`gradio`实现
+
+视频识别（根目录下）
 ```bash
-python app.py
+python app_video.py
 ```
 
-## ✍️训练
-使用`CLI`
+图片识别（根目录下）
+```bash
+python app_photo.py
+```
+<br/>
+
+# ✍️训练
+## 使用`CLI`命令行
 
 从 YAML 文件构建新模型并从头开始训练
 ```bash
 yolo detect train data=coco8.yaml model=yolo11n.yaml epochs=100 imgsz=640
 ```
 
+
 从预训练的 *.pt 模型开始训练
 ```bash
 yolo detect train data=coco8.yaml model=yolo11n.pt epochs=100 imgsz=640
 ```
+
 
 从 YAML 文件构建新模型，将预训练权重转移到新模型上并开始训练
 ```bash
 yolo detect train data=coco8.yaml model=yolo11n.yaml pretrained=yolo11n.pt epochs=100 imgsz=640
 ```
 
-使用`python`
+
+## 使用`python`代码
 ```python
 # 导入Ultralytics YOLO库
 from ultralytics import YOLO
@@ -122,16 +141,19 @@ results = model.train(
     # resume=True,         # ⏯️ 恢复中断的训练
 )
 ```
+
+
 ## ⚠️警告
 1.一般来说，报错多数是因为路径问题
 
 2.若出现训练慢/使用了 DEVICE = "0" 参数后报错，一般来说是由于pytorch没有下载好相对应的版本,可以运行 pytorch_test.py 进行测试
-```
+```bash
+cd test
 python pytorch_test.py
 ```
- <br />
+<br/>
 
-## 🎃验证
+# 🎃验证
 在训练后验证 YOLO 模型。在此模式下，将在验证集上评估模型，以测量其准确性和泛化性能。此模式可用于调整模型的超参数以提高其性能
 ```python
 from ultralytics import YOLO
@@ -161,11 +183,11 @@ model.val(data="path/to/separate/data.yaml")
 ```
 <br/>
 
-## 🔮预测
+# 🔮预测
 预测用于使用经过训练的 YOLO 模型对新图像或视频进行预测。在此模式下，模型是从检查点文件加载的，用户可以提供图像或视频来执行推理。该模型预测输入图像或视频中对象的类别和位置
+>  这里的代码都存放在verification文件夹内
 
-> ## 这里的代码都可以在verification文件夹内找到
-
+## 检测图片
 ```python
 from ultralytics import YOLO
 # 加载预训练模型
@@ -181,7 +203,7 @@ results = model(
 检测完后，图片会存放到runs/detect/predict
 
 
-### 检测视频
+## 检测视频
 > 在yolo中，会将视频裁剪成一帧一帧，进而逐帧去学习
 ```python
 from ultralytics import YOLO
@@ -197,8 +219,8 @@ results = model(
 )
 ```
 
-### 检测屏幕
-需要安装库 mss
+## 检测屏幕
+>需要安装库 mss
 ```bash
 pip install mss
 ```
@@ -228,8 +250,7 @@ for r in results:
         masks = r.masks    # 实例分割的掩膜（若适用）
 ```
 
-#### 检测电脑摄像头
-
+## 检测电脑摄像头
 ```python
 from ultralytics import YOLO
 
@@ -241,14 +262,9 @@ results = model(
     source = 0,
 )
 ```
-
 <br/>
 
-
-
-<br/>
-
-## 🏛️模型简介
+# 🏛️模型简介
 YOLO11 检测、分割和姿态模型在 [COCO](https://docs.ultralytics.com/datasets/detect/coco/) 数据集上进行预训练，这些模型可在此处获得，此外还有在 [ImageNet](https://docs.ultralytics.com/datasets/classify/imagenet/) 数据集上预训练的 YOLO11 分类 模型。
 
 
@@ -324,7 +340,7 @@ YOLO11 检测、分割和姿态模型在 [COCO](https://docs.ultralytics.com/dat
 
 <br/>
 
-## 📋︎使用Comet ML进行可视化面板
+# 📋︎使用Comet ML进行可视化面板
 
 <div align="center">
  <img alt="comet"  src="img\comet.png">
@@ -334,7 +350,7 @@ YOLO11 检测、分割和姿态模型在 [COCO](https://docs.ultralytics.com/dat
 
 Ultralytics YOLO11 与 Comet ML 无缝集成，可有效捕获和优化 YOLO11 对象检测模型训练过程的各个方面。在本指南中，我们将介绍安装过程、Comet ML 设置、实时洞察、自定义日志记录和离线使用，确保您的 YOLO11 培训得到全面记录和微调，以获得出色的结果。
 
-### 下载
+## 下载
 ```
 pip install ultralytics comet_ml torch torchvision
 ```
@@ -346,7 +362,8 @@ export COMET_API_KEY=<Your API Key>
 > 警告，export为Linux的命令，要在window下运行，有两种选择
 > + 临时设置 API 密钥
 > + 永久设置 API 密钥
-### 在 Windows 中设置 `COMET_API_KEY`
+
+## 在 Windows 中设置 `COMET_API_KEY`
 
 1. **临时设置 API 密钥**:
    在命令行中使用 `set` 命令临时设置环境变量：
@@ -373,14 +390,11 @@ export COMET_API_KEY=<Your API Key>
    ```
    如果 API 密钥有效，您应该看到相关的确认信息。
 
-### 使用 Comet ML 登录
-
+## 使用 Comet ML 登录
 一旦 API 密钥设置完成，您就可以使用 Comet ML 提供的命令行工具进行登录。例如：
 
 ```bash
 comet login
 ```
-
 它会要求您输入 API 密钥，如果环境变量已经配置正确，应该不需要再次输入。
  
- <br />
