@@ -13,7 +13,6 @@
 
 # 💫环境下载
 ## pip
-
 使用 `pip` 安装 Ultralytics，请执行以下命令：
 ```bash
 pip install ultralytics
@@ -31,7 +30,6 @@ pip install -r requirements.txt
 
 
 ## conda 
-
 使用 `conda` 安装 Ultralytics YOLO 
 ```bash
 conda install -c conda-forge ultralytics
@@ -40,6 +38,12 @@ conda install -c conda-forge ultralytics
 >**此方法是 pip 的绝佳替代方案，可确保与环境中的：ultralytics pytorch pytorch-cuda与其他包兼容。对于 CUDA 环境，最好安装，其能同时解决任何冲突**
 ```bash
 conda install -c pytorch -c nvidia -c conda-forge pytorch torchvision pytorch-cuda=11.8 ultralytics
+```
+
+## uv
+使用`uv`一键安装 Ultralytics与可视化界面模块gradio，请执行以下命令：（请确保安装好了uv）
+```bash
+uv sync
 ```
 
 ## 源码编译
